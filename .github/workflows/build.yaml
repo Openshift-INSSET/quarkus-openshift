@@ -15,6 +15,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Maven build native
         run: ./mvnw compile -Dnative -DskipTests
+
   build-dockerfile:
     runs-on: ubuntu-latest
     steps:
