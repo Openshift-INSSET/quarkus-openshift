@@ -1,0 +1,65 @@
+name: Build and Deploy Quarkus Native App on OpenShift
+
+on:
+  push:
+    branches:
+      - workflow/build
+  workflow_dispatch:
+
+
+env:
+  APP_NAME: insset-openshift
+  APP_PORT: ""
+
+  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  OPENSHIFT_NAMESPACE: oc-insset-1-dev
+
+  IMAGE_REGISTRY: ${{ secrets.QUAY_REGISTRY }}
+  IMAGE_REGISTRY_USER: ${{ secrets.QUAY_USERNAME }}
+  IMAGE_REGISTRY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+  IMAGE_TAGS: ""
+
+  DOCKER_USER: ${{ secrets.DOCKER_USER }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  REPO_NAME: ${{ secrets.DOCKER_REPO }}
+
+  PAT: ${{ secrets.PAT }}
+
+jobs:
+
+  openshift-ci-cd:
+
+    name: Build and deploy to OpenShift
+    runs-on: ubuntu-20.04
+    environment: production
+
+    outputs:
+      ROUTE: ${{ steps.deploy-and-expose.outputs.route }}
+      SELECTOR: ${{ steps.deploy-and-expose.outputs.selector }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install oc
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: 4
+
+      - name: Log in to OpenShift
+        uses: redhat-actions/oc-login@v1
+        with:
+          openshift_server_url: ${{ env.OPENSHIFT_SERVER }}
+          openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+          insecure_skip_tls_verify: true
+          namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Maven build
+        run: ./mvnw install -DskipTests -Dquarkus.openshift.deploy=true -Dquarkus.openshift.route.expose=true

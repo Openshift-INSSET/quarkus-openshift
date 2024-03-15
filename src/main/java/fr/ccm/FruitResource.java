@@ -25,6 +25,8 @@ public class FruitResource {
     @Transactional
     public Fruit list(String name) {
         List<Fruit> fruits = Fruit.listAll();
+        Log.info(fruits.size() + " fruits found");
+        Log.info("list :" + fruits.toString());
         for(Fruit fruit : fruits) {
             if (fruit.getName().equalsIgnoreCase(name)) {
                 return fruit;
@@ -38,7 +40,10 @@ public class FruitResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public List<Fruit> listAll() {
-        return Fruit.listAll();
+        List<Fruit> fruits = Fruit.listAll();
+        Log.info(fruits.size() + " fruits found");
+        Log.info("list :" + fruits.toString());
+        return fruits;
     }
 
     @POST
